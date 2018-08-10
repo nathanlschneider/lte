@@ -1,30 +1,33 @@
-const os = require('os'),
-      request = require('request'),
-      express = require('express'),
-      fs = require('fs'),
-      app = express();
+const request = require('request'),
+    fs = require('fs'),
+    options = {
+        url: 'https://www.cradlepointecm.com/api/v2/routers/?limit=500',
+        method: 'GET',
+        headers: {
+            'X-CP-API-ID': 'e79c6722',
+            'X-CP-API-KEY': '11248c51069c2e200d1e89c74830c431',
+            'X-ECM-API-ID': 'a86d9b3c-6f1b-498d-907a-bd2facf56bc9',
+            'X-ECM-API-KEY': '5d707dd2d354f0cc125cb43e7b365b972f7454c2',
+            'Content-Type': 'application/json'
+        }
+    };
 
-let CradlePointCollection = [];
+const runTimer = setInterval(function () {
 
-const options = {
-    url: 'https://www.cradlepointecm.com/api/v2/routers/?limit=500',
-    method: 'GET',
-    headers: {
-        'X-CP-API-ID': 'e79c6722',
-        'X-CP-API-KEY': '11248c51069c2e200d1e89c74830c431',
-        'X-ECM-API-ID': 'a86d9b3c-6f1b-498d-907a-bd2facf56bc9',
-        'X-ECM-API-KEY': '5d707dd2d354f0cc125cb43e7b365b972f7454c2',
-        'Content-Type': 'application/json'
-    }
-};
+    fs.stat("LTEData.csv", function (err, data) {
+        if (!err) {
+            fs.unlink("LTEData.csv", function (data) {});
+        }
+    });
 
-request(options, function (err, res, body) {
-    if (err) {
-        console.log(err);
-    } else {
-        procResult(body);
-    }
-});
+    request(options, function (err, res, body) {
+        if (err) {
+            console.log(err);
+        } else {
+            procResult(body);
+        }
+    });
+}, 300000);
 
 function procResult(data) {
     let jsonData = JSON.parse(data);
@@ -38,15 +41,10 @@ function procResult(data) {
         if (lteData[i].ipv4_address != null) {
             ipArr = lteData[i].ipv4_address.split(".", 4);
         }
-        CradlePointCollection[i] = new Cradlepoint(nameParser(name), status, conType(ipArr[0]));
+        //CradlePointCollection[i] = new Cradlepoint(nameParser(name), status, conType(ipArr[0]));
+        csvWriter(nameParser(name) + "," + status + "," + conType(ipArr[0]) + "\n")
     }
 
-    for (let i = 0; i < CradlePointCollection.length; i++) {
-        if (CradlePointCollection[i].id == "023") {
-            console.log(CradlePointCollection[i]);
-        }
-    }
- 
     function nameParser(data) {
         let data2 = data.replace(/\D/g, '');
         let data3 = data2.replace(/^0+/g, '');
@@ -66,4 +64,16 @@ function procResult(data) {
             return "WAN";
         }
     }
+
+    function csvWriter(data) {
+        fs.appendFile('LTEData.csv', data, 'utf8', function (err) {
+            if (err) {
+                console.log('Some error occured - file either not saved or corrupted file saved.');
+            } else {
+                // Success
+            }
+        });
+    }
+
+    runTimer.start();
 }
