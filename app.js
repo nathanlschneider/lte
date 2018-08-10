@@ -1,21 +1,10 @@
 const os = require('os'),
-    request = require('request'),
-    express = require('express'),
-    app = express();
+      request = require('request'),
+      express = require('express'),
+      fs = require('fs'),
+      app = express();
 
 let CradlePointCollection = [];
-
-app.get("/?WSDL", function (req, res) {
-    res.send("ok!");
-});
-
-app.get("/post", function (req, res) {
-    res.send("ok!");
-});
-
-app.listen(3000, function () {
-    console.log("Sever started on " + os.hostname() + " on port 3000. ");
-});
 
 const options = {
     url: 'https://www.cradlepointecm.com/api/v2/routers/?limit=500',
@@ -57,13 +46,7 @@ function procResult(data) {
             console.log(CradlePointCollection[i]);
         }
     }
-
-    function Cradlepoint(id, status, connectionType) {
-        this.id = id;
-        this.status = status;
-        this.connection = connectionType;
-    }
-
+ 
     function nameParser(data) {
         let data2 = data.replace(/\D/g, '');
         let data3 = data2.replace(/^0+/g, '');
